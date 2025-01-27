@@ -17,6 +17,8 @@ class Time(StatesGroup):
     start_time = State()
     end_time = State()
     current_time = State()
+    enter_manual_end_time = State()
+    enter_manual_start_time = State()
 
 class MainMenu(StatesGroup):
     menu = State()
@@ -25,7 +27,21 @@ def time_now():
     return datetime.now().strftime('%H:%M')
 
 def date_now():
-    return datetime.now().strftime('%d.%m.%Y')
+    return datetime.now().strftime('%d.%m')
+
+def is_valid_time_format(time_str: str):
+    try:
+        # Пробуем преобразовать введенную строку в дату и время
+        datetime.strptime(time_str, '%m-%d %H:%M')
+        return True
+    except ValueError:
+        return False
+
+def date_from_message(message: Message):
+    return datetime.strptime(message.text, '%m-%d %H:%M').strftime('%d.%m')
+
+def time_from_message(message: Message):
+    return datetime.strptime(message.text, '%m-%d %H:%M').strftime('%H:%M')
 
 @user_router.message(CommandStart())
 async def cmd_start(message: Message, state: FSMContext):
@@ -47,7 +63,7 @@ async def reg_contact(message: Message, state: FSMContext):
     await message.answer('Вы успешно авторизовались теперь вы в главном меню.\nВыберите действие', reply_markup=kb.main)
     
 
-@user_router.message(MainMenu.menu)
+@user_router.message(MainMenu.menu, F.text == 'В главное меню')
 async def main_menu(message: Message, state: FSMContext):
     await state.clear()
     await message.answer("Главное меню", reply_markup=kb.main)
@@ -67,6 +83,22 @@ async def current_time(message: Message, state: FSMContext):
                          , reply_markup=kb.back2menu)
 
 
+@user_router.message(Time.start_time, F.text == 'Записать время вручную')
+async def manual_start(message: Message, state: FSMContext):
+    await state.set_state(Time.enter_manual_start_time)
+    await message.answer('Введите время начала в формате\nмм-дд чч:мм')
+
+@user_router.message(Time.enter_manual_start_time)
+async def enter_manual_start_time(message: Message, state: FSMContext):
+    if is_valid_time_format(message.text):
+        await set_start_time(message.from_user.id, date_from_message(message), time_from_message(message))
+        await state.set_state(MainMenu.menu)
+        await message.answer(f'Время начала успешно записано\n{date_from_message(message)}\n{time_from_message(message)}'
+                             ,reply_markup=kb.back2menu)
+    else:
+        await message.answer('Неверный формат времени, попробуйте еще раз')
+
+
 @user_router.message(F.text == 'Конец сессии')
 async def get_service(message: Message, state: FSMContext):
     await state.set_state(Time.end_time)
@@ -79,3 +111,18 @@ async def current_time(message: Message, state: FSMContext):
     await state.set_state(MainMenu.menu)
     await message.answer(f'Время окончания успешно записано\n{date_now()}\n{time_now()}'
                          ,reply_markup=kb.back2menu)
+    
+@user_router.message(Time.end_time, F.text == 'Записать время вручную')
+async def manual_end(message: Message, state: FSMContext):
+    await state.set_state(Time.enter_manual_end_time)
+    await message.answer('Введите время окончания в формате\nмм-дд чч:мм')
+
+@user_router.message(Time.enter_manual_end_time)
+async def enter_manual_end_time(message: Message, state: FSMContext):
+    if is_valid_time_format(message.text):
+        await set_end_time(message.from_user.id, date_from_message(message), time_from_message(message))
+        await state.set_state(MainMenu.menu)
+        await message.answer(f'Время окончания успешно записано\n{date_from_message(message)}\n{time_from_message(message)}'
+                             ,reply_markup=kb.back2menu)
+    else:
+        await message.answer('Неверный формат времени, попробуйте еще раз')
