@@ -43,7 +43,7 @@ async def cmd_start(message: Message, state: FSMContext):
 async def reg_contact(message: Message, state: FSMContext):
     # data = await state.get_data()
     await update_user(message.from_user.id, message.contact.phone_number)
-    await state.clear()
+    await state.set_state(MainMenu.menu)
     await message.answer('Вы успешно авторизовались теперь вы в главном меню.\nВыберите действие', reply_markup=kb.main)
     
 
@@ -63,8 +63,8 @@ async def get_service(message: Message, state: FSMContext):
 async def current_time(message: Message, state: FSMContext):
     await set_start_time(message.from_user.id, date_now(), time_now())
     await state.set_state(MainMenu.menu)
-    await message.answer(f'Время начала успешно записано\n{date_now()}\n{time_now()}', 
-                         reply_markup=kb.main)
+    await message.answer(f'Время начала успешно записано\n{date_now()}\n{time_now()}'
+                         , reply_markup=kb.back2menu)
 
 
 @user_router.message(F.text == 'Конец сессии')
@@ -77,5 +77,5 @@ async def get_service(message: Message, state: FSMContext):
 async def current_time(message: Message, state: FSMContext):
     await set_end_time(message.from_user.id, date_now(), time_now())
     await state.set_state(MainMenu.menu)
-    await message.answer(f'Время окончания успешно записано\n{date_now()}\n{time_now()}', 
-                         reply_markup=kb.main)
+    await message.answer(f'Время окончания успешно записано\n{date_now()}\n{time_now()}'
+                         ,reply_markup=kb.back2menu)

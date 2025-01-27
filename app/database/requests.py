@@ -43,13 +43,27 @@ async def set_start_time(session, telegram_id, date, time):
 
 @connection
 async def set_end_time(session, telegram_id, date, time):
-    # Проверяем, есть ли запись для данного пользователя
-    record = await session.scalar(select(WorkTimesORM.end_time).where(WorkTimesORM.telegram_id == telegram_id, WorkTimesORM.session_date == date))
-    if not record:
-        # Создаём новую запись
-        await session.execute(update(WorkTimesORM).where(WorkTimesORM.telegram_id == telegram_id, WorkTimesORM.session_date == date).values(end_time=time, status=0))
+    # Проверяем, есть ли запись с `start_time` для пользователя
+    record = await session.scalar(
+        select(WorkTimesORM)
+        .where(
+            WorkTimesORM.telegram_id == telegram_id,
+            WorkTimesORM.session_date == date,
+            WorkTimesORM.start_time.isnot(None)  # Проверяем, что start_time существует
+        )
+    )
+    if record:
+        # Если запись найдена, обновляем end_time
+        await session.execute(
+            update(WorkTimesORM)
+            .where(
+                WorkTimesORM.telegram_id == telegram_id,
+                WorkTimesORM.session_date == date
+            )
+            .values(end_time=time, status=0)  # Обновляем end_time и статус
+        )
         await session.commit()
         return True
     else:
-        # Если запись уже существует, ничего не делаем
+        # Если записи нет, возвращаем False
         return False
