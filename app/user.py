@@ -22,7 +22,7 @@ class MainMenu(StatesGroup):
     menu = State()
 
 def time_now():
-    return datetime.now().strftime('%d.%m %H:%M')
+    return datetime.now().strftime('%H:%M')
 
 def date_now():
     return datetime.now().strftime('%d.%m.%Y')
@@ -32,11 +32,12 @@ async def cmd_start(message: Message, state: FSMContext):
     user = await set_user(message.from_user.id, message.from_user.username)
 
     if user:
+        # await state.set_state(MainMenu.menu)
         await message.answer(f"Приветсвтвую {message.from_user.username}. Выбери действие из списка ниже!", reply_markup=kb.main)
-        await state.set_state(MainMenu.menu)
     else:
-        await message.answer("Приветсвтвую, пройдите регистрацию.\nВведите ваш контакт", reply_markup=kb.contact)
         await state.set_state(Reg.contact)
+        await message.answer("Приветсвтвую, пройдите регистрацию.\nВведите ваш контакт", reply_markup=kb.contact)
+
 
 @user_router.message(Reg.contact, F.contact)
 async def reg_contact(message: Message, state: FSMContext):
@@ -48,16 +49,33 @@ async def reg_contact(message: Message, state: FSMContext):
 
 @user_router.message(MainMenu.menu)
 async def main_menu(message: Message, state: FSMContext):
-    await message.answer('Выберите действие', reply_markup=kb.main)
     await state.clear()
+    await message.answer("Главное меню", reply_markup=kb.main)
+
 
 @user_router.message(F.text == 'Начало сессии')
 async def get_service(message: Message, state: FSMContext):
     await state.set_state(Time.start_time)
     await message.answer('Выберите время начала', reply_markup=kb.time_kb)
 
+
 @user_router.message(Time.start_time, F.text == 'Текущее время')
 async def current_time(message: Message, state: FSMContext):
     await set_start_time(message.from_user.id, date_now(), time_now())
     await state.set_state(MainMenu.menu)
-    await message.answer('Время начала успешно записано', reply_markup=kb.main)
+    await message.answer(f'Время начала успешно записано\n{date_now()}\n{time_now()}', 
+                         reply_markup=kb.main)
+
+
+@user_router.message(F.text == 'Конец сессии')
+async def get_service(message: Message, state: FSMContext):
+    await state.set_state(Time.end_time)
+    await message.answer('Выберите время окончания', reply_markup=kb.time_kb)
+
+
+@user_router.message(Time.end_time, F.text == 'Текущее время')
+async def current_time(message: Message, state: FSMContext):
+    await set_end_time(message.from_user.id, date_now(), time_now())
+    await state.set_state(MainMenu.menu)
+    await message.answer(f'Время окончания успешно записано\n{date_now()}\n{time_now()}', 
+                         reply_markup=kb.main)

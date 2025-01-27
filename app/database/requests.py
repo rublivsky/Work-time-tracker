@@ -31,24 +31,25 @@ async def get_user(session, telegram_id):
 @connection
 async def set_start_time(session, telegram_id, date, time):
     # Проверяем, есть ли запись для данного пользователя
-    record = await session.scalar(select(WorkTimesORM.start_time).where(WorkTimesORM.telegram_id == telegram_id))
+    record = await session.scalar(select(WorkTimesORM.start_time).where(WorkTimesORM.telegram_id == telegram_id, WorkTimesORM.session_date == date))
     if not record:
         # Создаём новую запись
-        session.add(WorkTimesORM(telegram_id=telegram_id, date=date, start_time=time, status=1))
+        session.add(WorkTimesORM(telegram_id=telegram_id, session_date=date, start_time=time, status=1))
         await session.commit()
         return True
     else:
         # Если запись уже существует, ничего не делаем
         return False
 
-
 @connection
-async def set_end_time(session, telegram_id):
-    end_time = await session.scalar(select(WorkTimesORM).where(WorkTimesORM.telegram_id == telegram_id))
-    if not end_time:
-        await session.execute(update(WorkTimesORM.end_time).where(WorkTimesORM.telegram_id == telegram_id))
+async def set_end_time(session, telegram_id, date, time):
+    # Проверяем, есть ли запись для данного пользователя
+    record = await session.scalar(select(WorkTimesORM.end_time).where(WorkTimesORM.telegram_id == telegram_id, WorkTimesORM.session_date == date))
+    if not record:
+        # Создаём новую запись
+        await session.execute(update(WorkTimesORM).where(WorkTimesORM.telegram_id == telegram_id, WorkTimesORM.session_date == date).values(end_time=time, status=0))
         await session.commit()
         return True
     else:
+        # Если запись уже существует, ничего не делаем
         return False
-   

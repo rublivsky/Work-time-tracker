@@ -21,7 +21,7 @@ class WorkTimesORM(Base):
     __tablename__ = "work_time"
     id: Mapped[int] = mapped_column(primary_key=True)
     telegram_id = mapped_column(BigInteger, ForeignKey(UsersORM.telegram_id))
-    date: Mapped[str] = mapped_column(String(length=20))
+    session_date: Mapped[str] = mapped_column(String(length=20))
     start_time: Mapped[str] = mapped_column(String(length=20), nullable=True)
     end_time: Mapped[str] = mapped_column(String(length=20), nullable=True)
     bonuses: Mapped[int] = mapped_column(nullable=True)
