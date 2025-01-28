@@ -86,6 +86,9 @@ async def main_menu(message: Message, state: FSMContext):
     await message.answer("Главное меню", reply_markup=kb.main)
 
 
+
+
+
 @user_router.message(F.text == 'Начало сессии')
 async def get_service(message: Message, state: FSMContext):
     await state.set_state(Time.start_time)
@@ -98,7 +101,7 @@ async def current_time(message: Message, state: FSMContext):
     if record == True:
          await state.set_state(Time.end_time)
          await message.answer('У вас есть не оконченая сессия.\nЗапишите время конца сессии', 
-                              reply_markup=kb.end_time_kb)
+                              reply_markup=kb.time_kb)
     else:
         await set_start_time(message.from_user.id, date_now(), time_now())
         await state.set_state(MainMenu.menu)
@@ -126,6 +129,9 @@ async def enter_manual_start_time(message: Message, state: FSMContext):
                              ,reply_markup=kb.back2menu)
     else:
         await message.answer('Неверный формат времени, попробуйте еще раз')
+
+
+
 
 
 @user_router.message(F.text == 'Конец сессии')
