@@ -86,14 +86,10 @@ async def set_end_time(session, telegram_id, time):
 @connection
 async def get_work_hours(session, telegram_id, period):
     end_date = datetime.now().date()
-    if period == 'day':
-        start_date = end_date
-    elif period == 'week':
-        start_date = end_date - timedelta(days=7)
-    elif period == 'month':
-        start_date = end_date - timedelta(days=30)
-    else:
-        raise ValueError("Invalid period. Choose from 'day', 'week', or 'month'.")
+    if period == 'day': start_date = end_date
+    elif period == 'week': start_date = end_date - timedelta(days=7)
+    elif period == 'month': start_date = end_date - timedelta(days=30)
+    else: raise ValueError("Invalid period. Choose from 'day', 'week', or 'month'.")
 
     records = await session.execute(select(WorkTimesORM).where(
             WorkTimesORM.telegram_id == telegram_id,
@@ -102,12 +98,11 @@ async def get_work_hours(session, telegram_id, period):
             ))
 
     work_times = records.scalars().all()
-
     total_hours = 0
     for record in work_times:
         if record.start_time and record.end_time:
-            start_time = datetime.strptime(record.start_time, '%H:%M')
-            end_time = datetime.strptime(record.end_time, '%H:%M')
-            total_hours += (end_time - start_time).seconds / 3600
-
+            start_time = datetime.strptime(record.start_time, '%d.%m.%Y %H:%M')
+            end_time = datetime.strptime(record.end_time, '%d.%m.%Y %H:%M')
+            total_hours += (end_time - start_time).seconds
+            # / 3600
     return total_hours
