@@ -14,7 +14,13 @@ contact = ReplyKeyboardMarkup(keyboard=[
 ], resize_keyboard=True, input_field_placeholder='Нажмите кнопку ниже.')
 
 time_kb = ReplyKeyboardMarkup(keyboard = [
-        # keyboard.add(InlineKeyboardButton(text=barber.name, callback_data=f'barber_{barber.id}'))
         [KeyboardButton(text='Текущее время')],
         [KeyboardButton(text='Записать время вручную')],
+        [KeyboardButton(text="В главное меню")]
     ], resize_keyboard=True)
+
+analysis = ReplyKeyboardMarkup(keyboard = [
+    [KeyboardButton(text='Сводка за месяц'), KeyboardButton(text='Сводка за неделю')],
+    [KeyboardButton(text='Сводка за день')],
+    [KeyboardButton(text="В главное меню")]
+], rezie_keyboard=True)

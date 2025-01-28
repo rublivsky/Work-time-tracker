@@ -173,3 +173,7 @@ async def enter_manual_end_time(message: Message, state: FSMContext):
                              ,reply_markup=kb.back2menu)
     else:
         await message.answer('Неверный формат времени, попробуйте еще раз')
+
+# @user_router.message(F.text == 'Аналитика')
+# async def analysis(message: Message):
+#     await message.answer('Аналитика', reply_markup=kb.analysis)
