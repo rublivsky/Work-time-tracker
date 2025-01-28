@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 async def main():
     await async_main()
-    bot = Bot(token=os.getenv("API_KEY"))
+    bot = Bot(token=os.getenv("API_TOKEN"))
     dp = Dispatcher()
     dp.include_routers(
         # router, 

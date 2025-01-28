@@ -24,14 +24,15 @@ async def update_user(session, telegram_id, contact):
     await session.commit()
 
 @connection
-async def get_user(session, telegram_id):
-    async with session() as conn:
-        return await conn.execute(select(UsersORM).where(UsersORM.telegram_id == telegram_id))
+async def get_status(session, telegram_id):
+    record = await session.scalar(select(WorkTimesORM.status).where(WorkTimesORM.telegram_id == telegram_id))
+    return bool(record)
     
 @connection
 async def set_start_time(session, telegram_id, date, time):
     # Проверяем, есть ли запись для данного пользователя
-    record = await session.scalar(select(WorkTimesORM.start_time).where(WorkTimesORM.telegram_id == telegram_id, WorkTimesORM.session_date == date))
+    record = await session.scalar(select(WorkTimesORM.start_time).where(WorkTimesORM.telegram_id == telegram_id, 
+                                                                        WorkTimesORM.session_date == date))
     if not record:
         # Создаём новую запись
         session.add(WorkTimesORM(telegram_id=telegram_id, session_date=date, start_time=time, status=1))
