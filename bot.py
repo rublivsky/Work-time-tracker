@@ -15,9 +15,7 @@ async def main():
     await async_main()
     bot = Bot(token=os.getenv("API_KEY"))
     dp = Dispatcher()
-    dp.include_routers(
-        # router, 
-        user_router)
+    dp.include_routers(user_router)
     
     await dp.start_polling(bot)
 
