@@ -1,10 +1,10 @@
-from sqlalchemy import select, update, insert
+from sqlalchemy import select, update, insert, text
 from app.database.models import Base, engine, async_session, UsersORM, WorkTimesORM
 
 def connection(func):
     async def wrapper(*args, **kwargs):
         async with async_session() as session:
-            await session.execute("SET TIME ZONE 'Europe/Kyiv'")
+            await session.execute(text("SET TIME ZONE 'Europe/Kyiv'"))
             return await func(session, *args, **kwargs)
     return wrapper
 
