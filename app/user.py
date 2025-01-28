@@ -39,7 +39,8 @@ def local_time(time_str: str, timezone_str: str):
         return None
 
 def time_now():
-    return datetime.now().strftime('%H:%M')
+    tz = pytz.timezone('Europe/Kiev')  # Заменить на свой нужный часовой пояс
+    return datetime.now(tz).strftime('%H:%M')
 
 def date_now():
     return datetime.now().strftime('%d.%m')
