@@ -24,6 +24,7 @@ class Time(StatesGroup):
 class MainMenu(StatesGroup):
     menu = State()
 
+
 def local_time(time_str: str, timezone_str: str):
     try:
         # Пробуем преобразовать введенную строку в дату и время

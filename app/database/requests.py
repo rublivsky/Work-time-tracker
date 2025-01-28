@@ -25,46 +25,57 @@ async def update_user(session, telegram_id, contact):
 
 @connection
 async def get_status(session, telegram_id):
-    record = await session.scalar(select(WorkTimesORM.status).where(WorkTimesORM.telegram_id == telegram_id))
+    # Check if there is an ongoing session (status is True)
+    record = await session.scalar(
+        select(WorkTimesORM.status)
+        .where(
+            WorkTimesORM.telegram_id == telegram_id,
+            WorkTimesORM.status == True
+        )
+    )
     return bool(record)
-    
+
 @connection
 async def set_start_time(session, telegram_id, date, time):
-    # Проверяем, есть ли запись для данного пользователя
-    record = await session.scalar(select(WorkTimesORM.start_time).where(WorkTimesORM.telegram_id == telegram_id, 
-                                                                        WorkTimesORM.session_date == date))
-    if not record:
-        # Создаём новую запись
-        session.add(WorkTimesORM(telegram_id=telegram_id, session_date=date, start_time=time, status=1))
+    # Check if there is an ongoing session for the user
+    ongoing_session = await session.scalar(
+        select(WorkTimesORM)
+        .where(
+            WorkTimesORM.telegram_id == telegram_id,
+            WorkTimesORM.status == True
+        )
+    )
+    if not ongoing_session:
+        # Create a new session record
+        session.add(WorkTimesORM(telegram_id=telegram_id, session_date=date, start_time=time, status=True))
         await session.commit()
         return True
     else:
-        # Если запись уже существует, ничего не делаем
+        # If there is an ongoing session, do nothing
         return False
 
 @connection
 async def set_end_time(session, telegram_id, date, time):
-    # Проверяем, есть ли запись с `start_time` для пользователя
-    record = await session.scalar(
+    # Check if there is an ongoing session for the user
+    ongoing_session = await session.scalar(
         select(WorkTimesORM)
         .where(
             WorkTimesORM.telegram_id == telegram_id,
-            WorkTimesORM.session_date == date,
-            WorkTimesORM.start_time.isnot(None)  # Проверяем, что start_time существует
+            WorkTimesORM.status == True
         )
     )
-    if record:
-        # Если запись найдена, обновляем end_time
+    if ongoing_session:
+        # Update the end time and status of the ongoing session
         await session.execute(
             update(WorkTimesORM)
             .where(
                 WorkTimesORM.telegram_id == telegram_id,
-                WorkTimesORM.session_date == date
+                WorkTimesORM.status == True
             )
-            .values(end_time=time, status=0)  # Обновляем end_time и статус
+            .values(end_time=time, status=False)
         )
         await session.commit()
         return True
     else:
-        # Если записи нет, возвращаем False
+        # If there is no ongoing session, return False
         return False
