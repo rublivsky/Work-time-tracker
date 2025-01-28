@@ -1,3 +1,4 @@
+import pytz
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import CommandStart
@@ -22,6 +23,20 @@ class Time(StatesGroup):
 
 class MainMenu(StatesGroup):
     menu = State()
+
+def local_time(time_str: str, timezone_str: str):
+    try:
+        # Пробуем преобразовать введенную строку в дату и время
+        input_time = datetime.strptime(time_str, '%m-%d %H:%M')
+        # Устанавливаем часовой пояс для введенного времени
+        input_time = input_time.replace(tzinfo=pytz.timezone(timezone_str))
+        # Текущее время в UTC
+        utc_time = datetime.utcnow().replace(tzinfo=pytz.utc)
+        # Перевод времени в нужный часовой пояс
+        local_time = utc_time.astimezone(input_time.tzinfo)
+        return local_time.strftime('%d.%m %H:%M')
+    except (ValueError, pytz.UnknownTimeZoneError):
+        return None
 
 def time_now():
     return datetime.now().strftime('%H:%M')

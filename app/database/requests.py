@@ -4,6 +4,7 @@ from app.database.models import Base, engine, async_session, UsersORM, WorkTimes
 def connection(func):
     async def wrapper(*args, **kwargs):
         async with async_session() as session:
+            await session.execute("SET TIME ZONE 'Europe/Kyiv'")
             return await func(session, *args, **kwargs)
     return wrapper
 

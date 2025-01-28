@@ -3,6 +3,7 @@ import dotenv
 from sqlalchemy import ForeignKey, String, BigInteger, DateTime, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine, AsyncSession
+import asyncpg
 
 dotenv.load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL", "").replace("postgres://", "postgresql+asyncpg://")
