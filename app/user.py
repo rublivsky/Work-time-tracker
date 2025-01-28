@@ -9,6 +9,8 @@ from app.database.requests import set_user, get_status, set_start_time, set_end_
 from datetime import datetime
 import app.keyboards as kb
 
+from app.database.requests import get_work_hours
+
 user_router = Router()
 
 class Reg(StatesGroup):
@@ -174,6 +176,21 @@ async def enter_manual_end_time(message: Message, state: FSMContext):
     else:
         await message.answer('Неверный формат времени, попробуйте еще раз')
 
-# @user_router.message(F.text == 'Аналитика')
-# async def analysis(message: Message):
-#     await message.answer('Аналитика', reply_markup=kb.analysis)
+@user_router.message(F.text == 'Аналитика')
+async def analysis(message: Message):
+    await message.answer('Аналитика', reply_markup=kb.analysis)
+
+@user_router.message(F.text == 'Сводка за день')
+async def summary_day(message: Message):
+    total_hours = await get_work_hours(message.from_user.id, 'day')
+    await message.answer(f'Вы отработали {total_hours:.2f} часов за день.')
+
+@user_router.message(F.text == 'Сводка за неделю')
+async def summary_week(message: Message):
+    total_hours = await get_work_hours(message.from_user.id, 'week')
+    await message.answer(f'Вы отработали {total_hours:.2f} часов за неделю.')
+
+@user_router.message(F.text == 'Сводка за месяц')
+async def summary_month(message: Message):
+    total_hours = await get_work_hours(message.from_user.id, 'month')
+    await message.answer(f'Вы отработали {total_hours:.2f} часов за месяц.')
