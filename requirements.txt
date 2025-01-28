@@ -22,3 +22,4 @@ pytz==2024.2
 setuptools==75.8.0
 SQLAlchemy==2.0.37
 typing_extensions==4.12.2
+yarl==1.18.3
