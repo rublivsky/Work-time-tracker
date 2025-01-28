@@ -25,6 +25,13 @@ class Time(StatesGroup):
 
 class MainMenu(StatesGroup):
     menu = State()
+    
+class Analysis(StatesGroup):
+    analysis = State()
+    analysis_day = State()
+    analysis_week = State()
+    analysis_month = State()
+    analysis_menu_test = State()
 
 
 def local_time(time_str: str, timezone_str: str):
@@ -177,6 +184,7 @@ async def enter_manual_end_time(message: Message, state: FSMContext):
         await message.answer('Неверный формат времени, попробуйте еще раз')
 
 @user_router.message(F.text == 'Аналитика')
+await state.set_state(MainMenu.menu)
 async def analysis(message: Message):
     await message.answer('Аналитика', reply_markup=kb.analysis)
 

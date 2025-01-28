@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.INFO)
 
 async def main():
     await async_main()
-    bot = Bot(token=os.getenv("API_KEY"))
+    bot = Bot(token=os.getenv("API_KEY_BACKUP")) #if deploy change to API_KEY
     dp = Dispatcher()
     dp.include_routers(user_router)
     

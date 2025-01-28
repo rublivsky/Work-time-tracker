@@ -4,12 +4,15 @@ from sqlalchemy import ForeignKey, String, BigInteger, DateTime, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine, AsyncSession
 import asyncpg
+import sqlite3
 
 dotenv.load_dotenv()
-DATABASE_URL = os.getenv("DATABASE_URL", "").replace("postgres://", "postgresql+asyncpg://")
-if not DATABASE_URL:
-    raise ValueError("DATABASE_URL environment variable is not set")
-engine = create_async_engine(DATABASE_URL, echo=False)
+LOCAL_DATABASE=os.getenv("LOCAL_DATABASE")
+LOCAL_DATABASE = f"sqlite+aiosqlite:///{os.path.join(os.path.dirname(__file__), 'db.sqlite3')}"
+# DATABASE_URL = os.getenv("DATABASE_URL", "").replace("postgres://", "postgresql+asyncpg://")
+# if not DATABASE_URL:
+#     raise ValueError("DATABASE_URL environment variable is not set")
+engine = create_async_engine(LOCAL_DATABASE, echo=False) #if deploy change to DATABASE_URL
 
 async_session = async_sessionmaker(engine, class_=AsyncSession)
 

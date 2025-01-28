@@ -1,5 +1,5 @@
 from sqlalchemy import select, update, insert, text
-from app.database.models import Base, engine, async_session, UsersORM, WorkTimesORM
+from app.database.models import async_session, UsersORM, WorkTimesORM
 from datetime import datetime, timedelta
 
 def connection(func):
@@ -93,14 +93,13 @@ async def get_work_hours(session, telegram_id, period):
     else:
         raise ValueError("Invalid period. Choose from 'day', 'week', or 'month'.")
 
-    records = await session.execute(
-        select(WorkTimesORM)
-        .where(
+    records = await session.execute(select(WorkTimesORM).where(
             WorkTimesORM.telegram_id == telegram_id,
             WorkTimesORM.session_date >= start_date,
             WorkTimesORM.session_date < end_date
-        )
-    )
+            )
+                                    )
+
     work_times = records.scalars().all()
 
     total_hours = 0
