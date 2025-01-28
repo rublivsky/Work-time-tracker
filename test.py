@@ -14,6 +14,5 @@ from app.user import user_router, local_time
 #     status = await get_status('536212014')
 #     print(status)
 
-if __name__ == "__main__":
-    print(local_time('01-01 00:00', 'Europe/Moscow'))
-    # asyncio.run(main())
+
+# print(local_time('01-01 00:00', 'Europe/Kyiv'))
