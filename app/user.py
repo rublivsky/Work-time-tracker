@@ -1,73 +1,14 @@
-import pytz
 from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import StatesGroup, State
 
-from app.database.requests import set_user, get_status, set_start_time, set_end_time, update_user
-from datetime import datetime
 import app.keyboards as kb
-
-from app.database.requests import get_work_hours
+from app.states import Reg, Time, MainMenu, Analysis
+from app.database.requests import set_user, get_status, set_start_time, set_end_time, update_user, get_work_hours
+from app.logic import is_valid_time_format, datetime_from_message, time_now
 
 user_router = Router()
-
-class Reg(StatesGroup):
-    contact = State()
-
-class Time(StatesGroup):
-    start_time = State()
-    end_time = State()
-    current_time = State()
-    enter_manual_end_time = State()
-    enter_manual_start_time = State()
-
-class MainMenu(StatesGroup):
-    menu = State()
-    
-class Analysis(StatesGroup):
-    analysis = State()
-    analysis_day = State()
-    analysis_week = State()
-    analysis_month = State()
-    analysis_menu_test = State()
-
-
-def local_time(time_str: str, timezone_str: str):
-    try:
-        # Пробуем преобразовать введенную строку в дату и время
-        input_time = datetime.strptime(time_str, '%m-%d %H:%M')
-        # Устанавливаем часовой пояс для введенного времени
-        input_time = input_time.replace(tzinfo=pytz.timezone(timezone_str))
-        # Текущее время в UTC
-        utc_time = datetime.utcnow().replace(tzinfo=pytz.utc)
-        # Перевод времени в нужный часовой пояс
-        local_time = utc_time.astimezone(input_time.tzinfo)
-        return local_time.strftime('%d.%m %H:%M')
-    except (ValueError, pytz.UnknownTimeZoneError):
-        return None
-
-def time_now():
-    tz = pytz.timezone('Europe/Kiev')  # Заменить на свой нужный часовой пояс
-    return datetime.now(tz).strftime('%H:%M')
-
-def date_now():
-    return datetime.now().strftime('%d.%m')
-
-def is_valid_time_format(time_str: str):
-    try:
-        # Пробуем преобразовать введенную строку в дату и время
-        datetime.strptime(time_str, '%m-%d %H:%M')
-        return True
-    except ValueError:
-        return False
-
-def date_from_message(message: Message):
-    return datetime.strptime(message.text, '%m-%d %H:%M').strftime('%d.%m')
-
-def time_from_message(message: Message):
-    return datetime.strptime(message.text, '%m-%d %H:%M').strftime('%H:%M')
 
 @user_router.message(CommandStart())
 async def cmd_start(message: Message, state: FSMContext):
@@ -94,10 +35,7 @@ async def main_menu(message: Message, state: FSMContext):
     await state.clear()
     await message.answer("Главное меню", reply_markup=kb.main)
 
-
-
-
-
+#---------------------------------TimeStart---------------------------------#
 @user_router.message(F.text == 'Начало сессии')
 async def get_service(message: Message, state: FSMContext):
     await state.set_state(Time.start_time)
@@ -109,13 +47,11 @@ async def current_time(message: Message, state: FSMContext):
     record = await get_status(message.from_user.id)
     if record == True:
          await state.set_state(Time.end_time)
-         await message.answer('У вас есть не оконченая сессия.\nЗапишите время конца сессии', 
-                              reply_markup=kb.time_kb)
+         await message.answer('У вас есть не оконченая сессия.\nЗапишите время конца сессии', reply_markup=kb.time_kb)
     else:
-        await set_start_time(message.from_user.id, date_now(), time_now())
+        await set_start_time(message.from_user.id, time_now())
         await state.set_state(MainMenu.menu)
-        await message.answer(f'Время начала успешно записано\n{date_now()}\n{time_now()}'
-                            , reply_markup=kb.back2menu)
+        await message.answer(f'Время начала успешно записано\n{time_now()}', reply_markup=kb.back2menu)
 
 
 @user_router.message(Time.start_time, F.text == 'Записать время вручную')
@@ -123,26 +59,21 @@ async def manual_start(message: Message, state: FSMContext):
     record = await get_status(message.from_user.id)
     if record == True:
          await state.set_state(Time.end_time)
-         await message.answer('У вас есть не оконченая сессия.\nЗапишите время конца сессии', 
-                              reply_markup=kb.end_time_kb)
+         await message.answer('У вас есть не оконченая сессия.\nЗапишите время конца сессии', reply_markup=kb.time_kb)
     else:
         await state.set_state(Time.enter_manual_start_time)
-        await message.answer('Введите время начала в формате\nмм-дд чч:мм')
+        await message.answer('Введите время начала в формате\nПример: 28.01.2025 13:15')
 
 @user_router.message(Time.enter_manual_start_time)
 async def enter_manual_start_time(message: Message, state: FSMContext):
     if is_valid_time_format(message.text):
-        await set_start_time(message.from_user.id, date_from_message(message), time_from_message(message))
+        await set_start_time(message.from_user.id, datetime_from_message(message))
         await state.set_state(MainMenu.menu)
-        await message.answer(f'Время начала успешно записано\n{date_from_message(message)}\n{time_from_message(message)}'
-                             ,reply_markup=kb.back2menu)
+        await message.answer(f'Время начала успешно записано\n{datetime_from_message(message)}',reply_markup=kb.back2menu)
     else:
         await message.answer('Неверный формат времени, попробуйте еще раз')
 
-
-
-
-
+#---------------------------------TimeEnd---------------------------------#
 @user_router.message(F.text == 'Конец сессии')
 async def get_service(message: Message, state: FSMContext):
     await state.set_state(Time.end_time)
@@ -154,38 +85,35 @@ async def current_time(message: Message, state: FSMContext):
     record = await get_status(message.from_user.id)
     if record == False:
         await state.set_state(Time.start_time)
-        await message.answer('Время окончания не записано.\nЗапишите время начала сессии', 
-                             reply_markup=kb.time_kb)
+        await message.answer('Время окончания не записано.\nЗапишите время начала сессии', reply_markup=kb.time_kb)
     else:
-        await set_end_time(message.from_user.id, date_now(), time_now())
+        await set_end_time(message.from_user.id, time_now())
         await state.set_state(MainMenu.menu)
-        await message.answer(f'Время окончания успешно записано\n{date_now()}\n{time_now()}'
-                         ,reply_markup=kb.back2menu)
+        await message.answer(f'Время окончания успешно записано\n{time_now()}', reply_markup=kb.back2menu)
     
 @user_router.message(Time.end_time, F.text == 'Записать время вручную')
 async def manual_end(message: Message, state: FSMContext):
     record = await get_status(message.from_user.id)
     if record == False:
          await state.set_state(Time.start_time)
-         await message.answer('У вас есть не начатая сессия.\nЗапишите время начала сессии', 
-                              reply_markup=kb.time_kb)
+         await message.answer('У вас есть не начатая сессия.\nЗапишите время начала сессии', reply_markup=kb.time_kb)
     else:
         await state.set_state(Time.enter_manual_end_time)
-        await message.answer('Введите время окончания в формате\nмм-дд чч:мм')
+        await message.answer('Введите время окончания в формате\nПример: 28.01.2025 13:15')
 
 @user_router.message(Time.enter_manual_end_time)
 async def enter_manual_end_time(message: Message, state: FSMContext):
     if is_valid_time_format(message.text):
-        await set_end_time(message.from_user.id, date_from_message(message), time_from_message(message))
+        await set_end_time(message.from_user.id, datetime_from_message(message))
         await state.set_state(MainMenu.menu)
-        await message.answer(f'Время окончания успешно записано\n{date_from_message(message)}\n{time_from_message(message)}'
-                             ,reply_markup=kb.back2menu)
+        await message.answer(f'Время окончания успешно записано\n{datetime_from_message(message)}',reply_markup=kb.back2menu)
     else:
         await message.answer('Неверный формат времени, попробуйте еще раз')
 
+#---------------------------------Analys---------------------------------#
 @user_router.message(F.text == 'Аналитика')
-await state.set_state(MainMenu.menu)
-async def analysis(message: Message):
+async def analysis(message: Message, state: FSMContext):
+    await state.set_state(MainMenu.menu)
     await message.answer('Аналитика', reply_markup=kb.analysis)
 
 @user_router.message(F.text == 'Сводка за день')

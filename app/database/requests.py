@@ -37,7 +37,8 @@ async def get_status(session, telegram_id):
     return bool(record)
 
 @connection
-async def set_start_time(session, telegram_id, date, time):
+async def set_start_time(session, telegram_id, time):
+    time = datetime.strptime(time, '%d.%m.%Y %H:%M')
     # Check if there is an ongoing session for the user
     ongoing_session = await session.scalar(
         select(WorkTimesORM)
@@ -48,7 +49,7 @@ async def set_start_time(session, telegram_id, date, time):
     )
     if not ongoing_session:
         # Create a new session record
-        session.add(WorkTimesORM(telegram_id=telegram_id, session_date=date, start_time=time, status=True))
+        session.add(WorkTimesORM(telegram_id=telegram_id, start_time=time, status=True))
         await session.commit()
         return True
     else:
@@ -56,8 +57,9 @@ async def set_start_time(session, telegram_id, date, time):
         return False
 
 @connection
-async def set_end_time(session, telegram_id, date, time):
+async def set_end_time(session, telegram_id, time):
     # Check if there is an ongoing session for the user
+    time = datetime.strptime(time, '%d.%m.%Y %H:%M')
     ongoing_session = await session.scalar(
         select(WorkTimesORM)
         .where(
@@ -97,8 +99,7 @@ async def get_work_hours(session, telegram_id, period):
             WorkTimesORM.telegram_id == telegram_id,
             WorkTimesORM.session_date >= start_date,
             WorkTimesORM.session_date < end_date
-            )
-                                    )
+            ))
 
     work_times = records.scalars().all()
 

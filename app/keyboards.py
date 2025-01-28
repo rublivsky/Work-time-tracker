@@ -15,8 +15,8 @@ contact = ReplyKeyboardMarkup(keyboard=[
 
 time_kb = ReplyKeyboardMarkup(keyboard = [
         [KeyboardButton(text='Текущее время')],
-        [KeyboardButton(text='Записать время вручную')],
-        [KeyboardButton(text="В главное меню")]
+        [KeyboardButton(text='Записать время вручную')]
+        # ,[KeyboardButton(text="В главное меню")]
     ], resize_keyboard=True)
 
 analysis = ReplyKeyboardMarkup(keyboard = [
