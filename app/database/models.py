@@ -8,8 +8,8 @@ import sqlite3
 
 dotenv.load_dotenv()
 
-DATABASE_URL = f"sqlite+aiosqlite:///{os.path.join(os.path.dirname(__file__), 'db.sqlite3')}"
-# DATABASE_URL = os.getenv("DATABASE_URL", "").replace("postgres://", "postgresql+asyncpg://")
+# DATABASE_URL = f"sqlite+aiosqlite:///{os.path.join(os.path.dirname(__file__), 'db.sqlite3')}"
+DATABASE_URL = os.getenv("DATABASE_URL", "").replace("postgres://", "postgresql+asyncpg://")
 engine = create_async_engine(DATABASE_URL, echo=False) #if deploy change to DATABASE_URL
 async_session = async_sessionmaker(engine, class_=AsyncSession)
 
