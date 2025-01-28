@@ -7,12 +7,10 @@ import asyncpg
 import sqlite3
 
 dotenv.load_dotenv()
-LOCAL_DATABASE=os.getenv("LOCAL_DATABASE")
-LOCAL_DATABASE = f"sqlite+aiosqlite:///{os.path.join(os.path.dirname(__file__), 'db.sqlite3')}"
+
+DATABASE_URL = f"sqlite+aiosqlite:///{os.path.join(os.path.dirname(__file__), 'db.sqlite3')}"
 # DATABASE_URL = os.getenv("DATABASE_URL", "").replace("postgres://", "postgresql+asyncpg://")
-# if not DATABASE_URL:
-#     raise ValueError("DATABASE_URL environment variable is not set")
-engine = create_async_engine(LOCAL_DATABASE, echo=False) #if deploy change to DATABASE_URL
+engine = create_async_engine(DATABASE_URL, echo=False) #if deploy change to DATABASE_URL
 async_session = async_sessionmaker(engine, class_=AsyncSession)
 
 class Base(AsyncAttrs, DeclarativeBase):

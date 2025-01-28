@@ -97,8 +97,8 @@ async def get_work_hours(session, telegram_id, period):
 
     records = await session.execute(select(WorkTimesORM).where(
             WorkTimesORM.telegram_id == telegram_id,
-            WorkTimesORM.session_date >= start_date,
-            WorkTimesORM.session_date < end_date
+            WorkTimesORM.start_time >= start_date,
+            WorkTimesORM.start_time < end_date
             ))
 
     work_times = records.scalars().all()
